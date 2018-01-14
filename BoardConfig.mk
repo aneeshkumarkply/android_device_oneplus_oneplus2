@@ -1,4 +1,5 @@
 # Copyright (C) 2015 The CyanogenMod Project
+# Copyright (C) 2017 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,21 +72,22 @@ TARGET_TOOLCHAIN_ROOT := prebuilts/gcc/linux-x86/aarch64/$(TARGET_CROSS_COMPILE_
 TARGET_TOOLS_PREFIX := $(TARGET_TOOLCHAIN_ROOT)/bin/$(TARGET_CROSS_COMPILE_PREFIX)
 
 # Kernel
-BOARD_KERNEL_CMDLINE := androidboot.hardware=qcom ehci-hcd.park=3 lpm_levels.sleep_disabled=1 boot_cpus=0-7 androidboot.selinux=permissive
+BOARD_KERNEL_CMDLINE := \
+    androidboot.hardware=qcom \
+    ehci-hcd.park=3 \
+    lpm_levels.sleep_disabled=1 \
+    boot_cpus=0-7 \
+    androidboot.selinux=permissive
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_KERNEL_PAGESIZE := 4096
 BOARD_KERNEL_TAGS_OFFSET := 0x00000100
 BOARD_RAMDISK_OFFSET := 0x01000000
 BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
-TARGET_KERNEL_APPEND_DTB := true
 TARGET_KERNEL_ARCH := arm64
 TARGET_KERNEL_HEADER_ARCH := arm64
 TARGET_KERNEL_SOURCE := kernel/oneplus/msm8994
 TARGET_KERNEL_CONFIG := oneplus2_defconfig
-TARGET_KERNEL_CROSS_COMPILE_PREFIX := aarch64-linux-android-
-
-# QCOM hardware
-BOARD_USES_QCOM_HARDWARE := true
+TARGET_COMPILE_WITH_MSM_KERNEL := true
 
 # ANT+
 BOARD_ANT_WIRELESS_DEVICE := "qualcomm-uart"
@@ -115,32 +117,36 @@ BOARD_HAS_QCA_BT_ROME := true
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_QCOM := true
 QCOM_BT_USE_BTNV := true
-#QCOM_BT_USE_SMD_TTY := true
+QCOM_BT_USE_SMD_TTY := true
 
 # Camera
 TARGET_NEEDS_PLATFORM_TEXT_RELOCATIONS := true
-TARGET_USES_MEDIA_EXTENSIONS := true
 BOARD_QTI_CAMERA_32BIT_ONLY := true
-BOARD_USE_SAMSUNG_COLORFORMAT_NV21 := true
-BOARD_BUILD_OP2_CAMERA := true
-# For the flag above
 USE_DEVICE_SPECIFIC_CAMERA := true
+TARGET_USES_MEDIA_EXTENSIONS := true
+BOARD_BUILD_OP2_CAMERA := true
 
 # Charger
 BOARD_CHARGER_DISABLE_INIT_BLANK := true
 
-# CNE and DPM
-#TARGET_LDPRELOAD := libNimsWrap.so
-#BOARD_USES_QCNE := true
-# Filesystem
-TARGET_FS_CONFIG := $(PLATFORM_PATH)/config.fs
+# CM Hardware
+#BOARD_HARDWARE_CLASS += $(PLATFORM_PATH)/cmhw
+TARGET_TAP_TO_WAKE_NODE := "/proc/touchpanel/double_tap_enable"
 
 # Cpusets
 ENABLE_CPUSETS := true
 
+# Data services
+BUILD_CAF_DATASERVICES := true
+
+# Filesystem
+TARGET_FS_CONFIG := $(PLATFORM_PATH)/config.fs
+
 # GPS
 TARGET_NO_RPC := true
 USE_DEVICE_SPECIFIC_GPS := true
+
+WITH_DEXPREOPT ?= false
 
 # Graphics
 NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
@@ -171,29 +177,33 @@ TARGET_PROVIDES_KEYMASTER := true
 # Lights
 TARGET_PROVIDES_LIBLIGHT := true
 
+# Partitions
+BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864
+BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_CACHEIMAGE_PARTITION_SIZE := 268435456
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 67108864
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2684354560
+BOARD_USERDATAIMAGE_PARTITION_SIZE := 59047394304
+BOARD_FLASH_BLOCK_SIZE := 262144
+TARGET_USERIMAGES_USE_EXT4 := true
+TARGET_USERIMAGES_USE_F2FS := true
+
+# Power
+TARGET_POWERHAL_SET_INTERACTIVE_EXT := $(PLATFORM_PATH)/power/power_ext.c
+TARGET_POWERHAL_VARIANT := qcom
+
+# QCOM hardware
+#BOARD_USES_QCOM_HARDWARE := true
+
 # RPC
 TARGET_NO_RPC := true
 
-# Sensors
-USE_SENSOR_MULTI_HAL := true
+# SELinux
+#include device/qcom/sepolicy/sepolicy.mk
+#BOARD_SEPOLICY_DIRS += $(PLATFORM_PATH)/sepolicy
 
-# Enable dexpreopt to speed boot time
-ifeq ($(HOST_OS),linux)
-  # Only enable on user builds
-  # It's annoying to have to flash the whole rom to test things etc.
-  ifeq ($(TARGET_BUILD_VARIANT),user)
-    ifeq ($(WITH_DEXPREOPT),)
-      WITH_DEXPREOPT := true
-    endif
-  else
-    # Environment variable
-    ifeq ($(TARGET_FORCE_DEXPREOPT),true)
-      WITH_DEXPREOPT := true
-    else
-      WITH_DEXPREOPT := false
-    endif # TARGET_FORCE_DEXPREOPT = true
-  endif # TARGET_BUILD_VARIANT = user
-endif
+# Time services
+BOARD_USES_QC_TIME_SERVICES := true
 
 # Wifi
 BOARD_HAS_QCOM_WLAN := true
@@ -214,46 +224,8 @@ CONFIG_EAP_PROXY_DUAL_SIM := true
 CONFIG_EAP_PROXY_AKA_PRIME := true
 CONFIG_EAP_PROXY_MSM8994_TARGET := true
 
-# Partitions
-BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864
-BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_CACHEIMAGE_PARTITION_SIZE := 268435456
-BOARD_RECOVERYIMAGE_PARTITION_SIZE := 67108864
-BOARD_SYSTEMIMAGE_PARTITION_SIZE := 2684354560
-BOARD_USERDATAIMAGE_PARTITION_SIZE := 59047394304
-BOARD_FLASH_BLOCK_SIZE := 262144
-TARGET_USERIMAGES_USE_EXT4 := true
-TARGET_USERIMAGES_USE_F2FS := true
-
 # Recovery
 TARGET_RECOVERY_FSTAB := $(PLATFORM_PATH)/rootdir/etc/fstab.qcom
 
-# SELinux
-#include device/qcom/sepolicy/sepolicy.mk
-
-#BOARD_SEPOLICY_DIRS += $(PLATFORM_PATH)/sepolicy
-
-# Time services
-BOARD_USES_QC_TIME_SERVICES := true
-
-# D2TW
-TARGET_TAP_TO_WAKE_NODE := "/proc/touchpanel/double_tap_enable"
-
 # inherit from the proprietary version
 -include vendor/oneplus/oneplus2/BoardConfigVendor.mk
-
-BLISS_DEVELOPER := KunalShah
-
-# SDLLVM COMPILER
-ifneq ($(HOST_OS),darwin)
-
-SDCLANG := true
-
-SDCLANG_PATH := prebuilts/clang/linux-x86/host/sdclang-3.8/bin
-
-SDCLANG_LTO_DEFS := device/qcom/common/sdllvm-lto-defs.mk
-
-endif
-
-# Custom TC
-TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(ANDROID_BUILD_TOP)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9-kernel/bin/aarch64-linux-android-
